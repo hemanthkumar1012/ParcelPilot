@@ -121,26 +121,34 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["not
 # Health & Readiness
 app.include_router(health.router)
 
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+# ============================================================
+# FRONTEND
+# ============================================================
+
+frontend_dir = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "frontend"
+    )
+)
+
+if os.path.exists(frontend_dir):
+    app.mount(
+        "/frontend",
+        StaticFiles(
+            directory=frontend_dir,
+            html=True
+        ),
+        name="frontend"
+    )
+
 
 @app.get("/")
 def read_index():
-    return FileResponse(os.path.join(static_dir, "index.html"))
-
-@app.get("/track")
-def track_page():
-    return FileResponse(os.path.join(static_dir, "track.html"))
-
-@app.get("/login")
-def login_page():
-    return FileResponse(os.path.join(static_dir, "login.html"))
-
-@app.get("/dashboard")
-def dashboard_page():
-    return FileResponse(os.path.join(static_dir, "dashboard.html"))
-
-@app.get("/driver")
-def driver_page():
-    return FileResponse(os.path.join(static_dir, "driver.html"))
+    return FileResponse(
+        os.path.join(
+            frontend_dir,
+            "index.html"
+        )
+    )
