@@ -1010,3 +1010,103 @@ input { font-family: inherit; }
     width: 100%;
   }
 }
+/* ============================================================
+   PARCELPILOT — RECRUITER DEMO MODE
+   ============================================================ */
+
+.guest-mode-copy {
+  margin: 10px 0 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.guest-demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border: 1px solid #c8d7f5;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    135deg,
+    #f7faff 0%,
+    #eef4ff 100%
+  );
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.guest-demo-banner[hidden] {
+  display: none !important;
+}
+
+.guest-demo-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  background: #2f6fed;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.guest-demo-banner-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.guest-demo-banner-title {
+  margin-bottom: 3px;
+  color: var(--navy-900);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.guest-demo-banner-text {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.guest-demo-banner .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.guest-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 7px;
+  padding: 4px 9px;
+  border: 1px solid #f5d0a9;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #b54708;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.guest-mode-badge[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .guest-demo-banner {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .guest-demo-banner .btn {
+    width: 100%;
+  }
+}
