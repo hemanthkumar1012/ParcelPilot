@@ -243,10 +243,13 @@
 
       <!-- ============================= GUEST MODE ============================= -->
 
+      <!-- ============================= GUEST DEMO ACCESS ============================= -->
+
       <button
         type="button"
         id="guest-mode-btn"
-        class="btn btn-secondary btn-block guest-mode-btn">
+        class="btn btn-secondary btn-block guest-mode-btn"
+        aria-describedby="guest-mode-description">
 
         <span class="btn-label">
           Continue as Guest
@@ -259,9 +262,11 @@
 
       </button>
 
-
-      <p class="guest-mode-copy">
-        Explore a read-only demo without creating an account.
+      <p
+        id="guest-mode-description"
+        class="guest-mode-copy">
+        Explore the full application in read-only demo mode.
+      </p>
       </p>
 
     </form>
