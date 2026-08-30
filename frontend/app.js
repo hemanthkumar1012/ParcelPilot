@@ -863,7 +863,13 @@ function showApp() {
   updateUserUI();
   updateGuestUI();
 
+  /*
+   * ============================================================
+   * GUEST / RECRUITER DEMO MODE
+   * ============================================================
+   */
   if (isGuest()) {
+
     state.currentPage = "dashboard";
 
     state.user = {
@@ -871,8 +877,14 @@ function showApp() {
       email: "Recruiter Demo"
     };
 
+    /*
+     * Load local demo data.
+     */
     cloneGuestData();
 
+    /*
+     * Show demo indicator.
+     */
     const guestBadge =
       $("guest-mode-badge");
 
@@ -882,6 +894,9 @@ function showApp() {
         "DEMO MODE · READ ONLY";
     }
 
+    /*
+     * Show recruiter banner if present.
+     */
     const demoBanner =
       $("guest-demo-banner");
 
@@ -889,10 +904,20 @@ function showApp() {
       demoBanner.hidden = false;
     }
 
+    /*
+     * IMPORTANT:
+     * This uses the same ParcelPilot application shell.
+     */
     setActivePage("dashboard");
 
     return;
   }
+
+  /*
+   * ============================================================
+   * NORMAL AUTHENTICATED MODE
+   * ============================================================
+   */
 
   const guestBadge =
     $("guest-mode-badge");
@@ -910,148 +935,6 @@ function showApp() {
 
   setActivePage("dashboard");
 }
-    if (sidebarName) {
-      sidebarName.textContent =
-        name;
-    }
-
-    if (sidebarEmail) {
-      sidebarEmail.textContent =
-        email;
-    }
-  }
-
-
-  function updateGuestUI() {
-    const badge =
-      $("guest-mode-badge");
-
-    const newShipmentButton =
-      $("new-shipment-btn");
-
-    const newDriverButton =
-      $("new-driver-btn");
-
-    const guest =
-      isGuest();
-
-    if (badge) {
-      badge.hidden = !guest;
-    }
-
-    if (newShipmentButton) {
-      newShipmentButton.disabled =
-        guest;
-
-      newShipmentButton.title = guest
-        ? "Creating shipments is disabled in Guest Mode."
-        : "";
-    }
-
-    if (newDriverButton) {
-      newDriverButton.disabled =
-        guest;
-
-      newDriverButton.title = guest
-        ? "Creating drivers is disabled in Guest Mode."
-        : "";
-    }
-  }
-
-
-  /* ----------------------------- NAVIGATION ----------------------------- */
-
-  const PAGE_META = {
-    dashboard: {
-      title: "Dashboard",
-      subtitle:
-        "Operational overview across every shipment."
-    },
-
-    shipments: {
-      title: "Shipments",
-      subtitle:
-        "Search, review, and manage every shipment."
-    },
-
-    tracking: {
-      title: "Tracking",
-      subtitle:
-        "Follow a shipment through every stage."
-    },
-
-    drivers: {
-      title: "Drivers",
-      subtitle:
-        "Fleet visibility and driver operations."
-    },
-
-    notifications: {
-      title: "Notifications",
-      subtitle:
-        "Everything that needs your attention."
-    }
-  };
-
-
-  function setActivePage(page) {
-    if (!PAGE_META[page]) {
-      page = "dashboard";
-    }
-
-    state.currentPage = page;
-
-    document
-      .querySelectorAll(".page")
-      .forEach((section) => {
-        const sectionPage =
-          section.id.replace(
-            "page-",
-            ""
-          );
-
-        section.classList.toggle(
-          "hidden",
-          sectionPage !== page
-        );
-      });
-
-
-    document
-      .querySelectorAll(".nav-item")
-      .forEach((item) => {
-        item.classList.toggle(
-          "active",
-          item.dataset.page === page
-        );
-      });
-
-
-    const meta =
-      PAGE_META[page];
-
-    const title =
-      $("page-title");
-
-    const subtitle =
-      $("page-subtitle");
-
-    if (title) {
-      title.textContent =
-        meta.title;
-    }
-
-    if (subtitle) {
-      subtitle.textContent =
-        meta.subtitle;
-    }
-
-
-    if (page === "dashboard") {
-      if (isGuest()) {
-        renderDashboard();
-      } else {
-        loadDashboard();
       }
     }
 
