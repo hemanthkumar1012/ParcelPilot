@@ -43,8 +43,8 @@ def create_driver(db: Session, driver_in: DriverCreate) -> dict:
         "created_at": driver.created_at
     }
 
-def list_drivers(db: Session):
-    drivers = db.query(Driver).all()
+def list_drivers(db: Session, skip: int = 0, limit: int = 100):
+    drivers = db.query(Driver).offset(skip).limit(limit).all()
     results = []
     for d in drivers:
         results.append({

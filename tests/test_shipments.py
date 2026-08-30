@@ -88,7 +88,7 @@ def test_invalid_status_transition(client, auth_customer, auth_admin):
     }, headers=auth_admin)
     
     assert res2.status_code == 400
-    assert "Invalid status transition" in res2.json()["detail"]
+    assert "Invalid status transition" in res2.json()["error"]["message"]
 
 def test_customer_can_cancel_created_shipment(client, auth_customer):
     res = client.post("/api/shipments", json={

@@ -22,7 +22,7 @@ def test_register_duplicate(client):
         "password": "strongpassword"
     })
     assert response.status_code == 400
-    assert response.json()["detail"] == "User with this email already exists."
+    assert response.json()["error"]["message"] == "User with this email already exists."
 
 def test_register_invalid_email(client):
     response = client.post("/api/auth/register", json={
@@ -39,7 +39,7 @@ def test_register_weak_password(client):
         "password": "short"
     })
     assert response.status_code == 400
-    assert response.json()["detail"] == "Password must be at least 6 characters long."
+    assert response.json()["error"]["message"] == "Password must be at least 6 characters long."
 
 def test_login_success(client):
     client.post("/api/auth/register", json={
@@ -66,7 +66,7 @@ def test_login_incorrect_password(client):
         "password": "wrongpassword"
     })
     assert response.status_code == 401
-    assert response.json()["detail"] == "Incorrect email or password"
+    assert response.json()["error"]["message"] == "Incorrect email or password"
 
 def test_me_authenticated(client):
     client.post("/api/auth/register", json={
