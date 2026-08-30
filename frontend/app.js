@@ -846,7 +846,7 @@
   }
 
 
- function showApp() {
+function showApp() {
   const loginScreen = $("login-screen");
   const appScreen = $("app-screen");
 
@@ -861,32 +861,36 @@
   document.body.classList.add("app-active");
 
   /*
-   * Guest / HR demo mode
+   * Update the user information in the
+   * sidebar and header first.
+   */
+  updateUserUI();
+  updateGuestUI();
+
+  /*
+   * ==========================================================
+   * GUEST / RECRUITER DEMO MODE
+   * ==========================================================
+   *
+   * Guests must never depend on protected API calls.
+   * All demonstration data is already stored locally.
    */
   if (isGuest()) {
+
     state.currentPage = "dashboard";
 
-    /*
-     * Demo identity
-     */
     state.user = {
       full_name: "Guest Viewer",
       email: "Recruiter Demo"
     };
 
     /*
-     * Make sure the demo data is available.
+     * Load a fresh copy of the demonstration dataset.
      */
     cloneGuestData();
 
     /*
-     * Update sidebar/header.
-     */
-    updateUserUI();
-    updateGuestUI();
-
-    /*
-     * Explicit demo indicator.
+     * Show the persistent demo indicator.
      */
     const guestBadge =
       $("guest-mode-badge");
@@ -898,25 +902,34 @@
     }
 
     /*
-     * Open dashboard immediately.
+     * Show the recruiter-facing dashboard banner
+     * when it exists in index.html.
      */
-    navigateTo("dashboard");
+    const demoBanner =
+      $("guest-demo-banner");
+
+    if (demoBanner) {
+      demoBanner.hidden = false;
+    }
 
     /*
-     * Render dashboard directly from
-     * the local demo dataset.
+     * Open the dashboard immediately.
+     *
+     * setActivePage() already knows how to render
+     * Guest Mode without calling the protected API.
      */
-    renderDashboard();
+    setActivePage("dashboard");
 
-    /*
-     * No protected API requests in Guest Mode.
-     */
     return;
   }
 
+
   /*
-   * Normal authenticated user.
+   * ==========================================================
+   * NORMAL AUTHENTICATED MODE
+   * ==========================================================
    */
+
   const guestBadge =
     $("guest-mode-badge");
 
@@ -924,58 +937,17 @@
     guestBadge.hidden = true;
   }
 
-  updateUserUI();
-  updateGuestUI();
+  const demoBanner =
+    $("guest-demo-banner");
 
-  navigateTo("dashboard");
-
-  loadDashboard();
-  refreshNotificationBadge();
-}
-    navigateTo(
-      "dashboard"
-    );
-
-    renderStats(
-      state.shipments
-    );
-
-    renderActivityChart(
-      state.shipments
-    );
-
-    renderStatusDistribution(
-      state.shipments
-    );
-
-    renderRecentShipments(
-      state.shipments.slice(0, 6)
-    );
-
-    renderAlerts(
-      state.notifications
-    );
-
-    return;
+  if (demoBanner) {
+    demoBanner.hidden = true;
   }
 
   /*
-   * Normal authenticated user.
+   * Open the normal authenticated dashboard.
    */
-  const guestBadge =
-    $("guest-mode-badge");
-
-  if (guestBadge) {
-    guestBadge.hidden = true;
-  }
-
-  navigateTo(
-    "dashboard"
-  );
-
-  loadDashboard();
-
-  refreshNotificationBadge();
+  setActivePage("dashboard");
 }
   function updateUserUI() {
     const user =
