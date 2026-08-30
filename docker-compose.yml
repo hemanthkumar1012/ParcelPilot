@@ -2,21 +2,24 @@ version: "3.8"
 services:
   web:
     build: .
+    command: sh -c "alembic upgrade head && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000"
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/parcelpilot
-      - SECRET_KEY=development-secret-key-replace-in-prod
+      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@postgres:5432/parcelpilot}
+      - SECRET_KEY=${SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["*"]}
     depends_on:
       postgres:
         condition: service_healthy
+    restart: always
 
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: parcelpilot
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-parcelpilot}
     ports:
       - "5432:5432"
     volumes:
@@ -26,6 +29,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: always
 
 volumes:
   postgres_data:

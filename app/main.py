@@ -24,9 +24,12 @@ logger = logging.getLogger("parcelpilot")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        Base.metadata.create_all(bind=engine)
+        # In production, migrations should be handled by Alembic.
+        # We only auto-create tables for SQLite in tests or testdb.
+        if "sqlite" in settings.DATABASE_URL or "testdb" in settings.DATABASE_URL:
+            Base.metadata.create_all(bind=engine)
     except Exception as e:
-        logger.warning(f"Could not create tables in postgres: {e}")
+        logger.warning(f"Could not create tables: {e}")
     yield
 
 app = FastAPI(
@@ -95,7 +98,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

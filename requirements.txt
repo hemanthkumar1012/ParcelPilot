@@ -9,3 +9,5 @@ passlib[bcrypt]
 PyJWT
 email-validator
 python-multipart
+gunicorn
+alembic
