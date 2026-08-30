@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ParcelPilot — Logistics Control Center</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ============================= LOGIN SCREEN ============================= -->
+<div id="login-screen" class="login-screen">
+  <div class="login-brand">
+    <div class="login-brand-inner">
+      <div class="brand-mark">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="34" height="34" rx="9" fill="#2F6FED"/>
+          <path d="M9 17 L15 23 L25 11" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>ParcelPilot</span>
+      </div>
+
+      <h1 class="login-headline">Move every shipment<br/>with confidence.</h1>
+      <p class="login-copy">
+        ParcelPilot is the operations layer for teams who route, track, and deliver
+        at scale — one console for every shipment, driver, and exception.
+      </p>
+
+      <ul class="login-features">
+        <li><span class="feature-dot"></span> Live shipment tracking from origin to doorstep</li>
+        <li><span class="feature-dot"></span> Driver assignment and fleet visibility</li>
+        <li><span class="feature-dot"></span> Operational alerts the moment something needs you</li>
+      </ul>
+
+      <div class="login-route-signature" aria-hidden="true">
+        <svg viewBox="0 0 320 90" width="100%" height="90">
+          <path id="route-path" d="M10 70 C 80 70, 90 20, 160 20 S 250 70, 310 70" fill="none" stroke="#3B6FD9" stroke-width="2" stroke-dasharray="6 7"/>
+          <circle cx="10" cy="70" r="4.5" fill="#7FA6F7"/>
+          <circle cx="160" cy="20" r="4.5" fill="#7FA6F7"/>
+          <circle cx="310" cy="70" r="4.5" fill="#7FA6F7"/>
+          <circle id="route-pulse" r="5" fill="#EAF1FF">
+            <animateMotion dur="3.4s" repeatCount="indefinite" path="M10 70 C 80 70, 90 20, 160 20 S 250 70, 310 70"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-form-panel">
+    <div class="login-form-card">
+      <div class="login-form-header">
+        <h2>Sign in</h2>
+        <p>Enter your operator credentials to access the control center.</p>
+      </div>
+
+      <form id="login-form" class="login-form" novalidate>
+        <div class="form-field">
+          <label for="login-email">Email address</label>
+          <input type="email" id="login-email" name="email" autocomplete="username" placeholder="you@company.com" required />
+        </div>
+
+        <div class="form-field">
+          <label for="login-password">Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="••••••••" required />
+            <button type="button" id="toggle-password-btn" class="input-inline-btn" aria-label="Show password">Show</button>
+          </div>
+        </div>
+
+        <div id="login-error" class="form-error" role="alert" hidden></div>
+
+        <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block">
+          <span class="btn-label">Sign in</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+      </form>
+
+      <p class="login-hint">Test account: <code>parcelpilot.test2@gmail.com</code></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= MAIN APPLICATION ============================= -->
+<div id="app-screen" class="app-screen" hidden>
+
+  <button id="sidebar-backdrop" class="sidebar-backdrop" aria-label="Close menu" hidden></button>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-top">
+      <div class="brand-mark brand-mark-sidebar">
+        <svg width="28" height="28" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="34" height="34" rx="9" fill="#2F6FED"/>
+          <path d="M9 17 L15 23 L25 11" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="brand-text">
+          <span class="brand-title">ParcelPilot</span>
+          <span class="brand-subtitle">Logistics Control Center</span>
+        </div>
+      </div>
+      <button id="sidebar-close-btn" class="sidebar-close-btn" aria-label="Close menu">✕</button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Primary">
+      <button class="nav-item" data-page="dashboard" type="button">
+        <span class="nav-icon" aria-hidden="true">◇</span><span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-page="shipments" type="button">
+        <span class="nav-icon" aria-hidden="true">▤</span><span>Shipments</span>
+      </button>
+      <button class="nav-item" data-page="tracking" type="button">
+        <span class="nav-icon" aria-hidden="true">◎</span><span>Tracking</span>
+      </button>
+      <button class="nav-item" data-page="drivers" type="button">
+        <span class="nav-icon" aria-hidden="true">▣</span><span>Drivers</span>
+      </button>
+      <button class="nav-item" data-page="notifications" type="button">
+        <span class="nav-icon" aria-hidden="true">◈</span><span>Notifications</span>
+        <span id="sidebar-notif-badge" class="nav-badge" hidden>0</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="system-status">
+        <span id="system-status-dot" class="status-dot status-dot-ok"></span>
+        <span id="system-status-text">All systems operational</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div class="user-meta">
+          <span id="sidebar-user-name" class="user-name">—</span>
+          <span id="sidebar-user-email" class="user-email">—</span>
+        </div>
+      </div>
+      <button id="logout-btn" class="btn btn-ghost btn-block" type="button">Log out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="topbar">
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu">☰</button>
+
+      <div class="topbar-titles">
+        <h1 id="page-title">Dashboard</h1>
+        <p id="page-subtitle">Operational overview across every shipment.</p>
+      </div>
+
+      <form id="global-search-form" class="global-search" role="search">
+        <input type="text" id="global-search-input" placeholder="Search tracking ID, receiver, city…" aria-label="Global shipment search" />
+        <button type="submit" class="global-search-btn" aria-label="Search">⏎</button>
+      </form>
+
+      <div class="topbar-actions">
+        <button id="header-notif-btn" class="icon-btn" aria-label="Notifications" type="button">
+          <span aria-hidden="true">◈</span>
+          <span id="header-notif-badge" class="icon-btn-badge" hidden>0</span>
+        </button>
+        <div class="user-avatar user-avatar-sm" id="header-user-avatar">?</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ---------------- DASHBOARD ---------------- -->
+      <section id="page-dashboard" class="page">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total shipments</span>
+            <span id="stat-total" class="stat-value">—</span>
+            <span class="stat-foot">Across all statuses</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">In transit</span>
+            <span id="stat-in-transit" class="stat-value stat-value-info">—</span>
+            <span class="stat-foot">Currently moving</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Delivered</span>
+            <span id="stat-delivered" class="stat-value stat-value-success">—</span>
+            <span class="stat-foot">Completed successfully</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Operational alerts</span>
+            <span id="stat-alerts" class="stat-value stat-value-warning">—</span>
+            <span class="stat-foot">Need attention</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel panel-activity">
+            <div class="panel-header">
+              <h2>Shipment activity</h2>
+              <p>Route flow across the network, live-refreshed.</p>
+            </div>
+            <div id="activity-chart" class="activity-chart"></div>
+          </div>
+
+          <div class="panel panel-distribution">
+            <div class="panel-header">
+              <h2>Status distribution</h2>
+              <p>Share of shipments by current status.</p>
+            </div>
+            <div id="status-distribution" class="status-distribution"></div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid dashboard-grid-lower">
+          <div class="panel panel-recent">
+            <div class="panel-header">
+              <h2>Recent shipments</h2>
+              <p>The latest activity across your network.</p>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tracking ID</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Receiver</th>
+                    <th>Status</th>
+                    <th>ETA</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="recent-shipments-body"></tbody>
+              </table>
+            </div>
+            <div id="recent-shipments-loading" class="table-state" hidden>
+              <div class="spinner"></div><span>Loading shipments…</span>
+            </div>
+            <div id="recent-shipments-empty" class="table-state" hidden>
+              <span class="empty-icon">▤</span>
+              <p>No shipments yet</p>
+              <span>Create your first shipment to see it appear here.</span>
+            </div>
+          </div>
+
+          <div class="panel panel-side">
+            <div class="panel-header">
+              <h2>Quick tracking</h2>
+              <p>Look up any shipment by tracking ID.</p>
+            </div>
+            <form id="quick-track-form" class="quick-track-form">
+              <input type="text" id="quick-track-input" placeholder="e.g. PP-2026-169247" required />
+              <button type="submit" class="btn btn-secondary">Track</button>
+            </form>
+            <div id="quick-track-result" class="quick-track-result"></div>
+
+            <div class="panel-divider"></div>
+
+            <div class="panel-header">
+              <h2>Operational alerts</h2>
+              <p>Notifications that need a look.</p>
+            </div>
+            <ul id="alerts-list" class="alerts-list"></ul>
+            <div id="alerts-empty" class="empty-inline" hidden>No active alerts. Everything looks calm.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------- SHIPMENTS ---------------- -->
+      <section id="page-shipments" class="page hidden">
+        <div class="toolbar">
+          <div class="search-input-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input type="text" id="shipment-search-input" placeholder="Search by tracking ID, receiver, origin, destination…" />
+          </div>
+          <div class="toolbar-actions">
+            <button id="shipments-refresh-btn" class="btn btn-secondary" type="button">Refresh</button>
+            <button id="new-shipment-btn" class="btn btn-primary" type="button">+ New shipment</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tracking ID</th>
+                  <th>Origin</th>
+                  <th>Destination</th>
+                  <th>Receiver</th>
+                  <th>Status</th>
+                  <th>ETA</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="shipments-table-body"></tbody>
+            </table>
+          </div>
+          <div id="shipments-loading" class="table-state" hidden>
+            <div class="spinner"></div><span>Loading shipments…</span>
+          </div>
+          <div id="shipments-empty" class="table-state" hidden>
+            <span class="empty-icon">▤</span>
+            <p>No shipments found</p>
+            <span>Try a different search, or create a new shipment.</span>
+          </div>
+          <div id="shipments-error" class="table-state" hidden>
+            <span class="empty-icon">⚠</span>
+            <p>Couldn't load shipments</p>
+            <span id="shipments-error-text">Something went wrong.</span>
+            <button class="btn btn-secondary btn-sm" id="shipments-retry-btn" type="button">Try again</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------- TRACKING ---------------- -->
+      <section id="page-tracking" class="page hidden">
+        <div class="panel panel-tracking-search">
+          <div class="panel-header">
+            <h2>Track a shipment</h2>
+            <p>Enter a tracking ID to see its full journey.</p>
+          </div>
+          <form id="tracking-form" class="tracking-form">
+            <input type="text" id="tracking-input" placeholder="e.g. PP-2026-169247" required />
+            <button type="submit" class="btn btn-primary">Track shipment</button>
+          </form>
+        </div>
+
+        <div id="tracking-page-result"></div>
+      </section>
+
+      <!-- ---------------- DRIVERS ---------------- -->
+      <section id="page-drivers" class="page hidden">
+        <div class="toolbar">
+          <div class="search-input-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input type="text" id="driver-search-input" placeholder="Search drivers by name…" />
+          </div>
+          <div class="toolbar-actions">
+            <button id="drivers-refresh-btn" class="btn btn-secondary" type="button">Refresh</button>
+            <button id="new-driver-btn" class="btn btn-primary" type="button">+ New driver</button>
+          </div>
+        </div>
+
+        <div id="drivers-grid" class="drivers-grid"></div>
+        <div id="drivers-loading" class="table-state" hidden>
+          <div class="spinner"></div><span>Loading drivers…</span>
+        </div>
+        <div id="drivers-empty" class="table-state" hidden>
+          <span class="empty-icon">▣</span>
+          <p>No drivers yet</p>
+          <span>Add a driver to start assigning shipments.</span>
+        </div>
+        <div id="drivers-error" class="table-state" hidden>
+          <span class="empty-icon">⚠</span>
+          <p>Couldn't load drivers</p>
+          <span id="drivers-error-text">Something went wrong.</span>
+          <button class="btn btn-secondary btn-sm" id="drivers-retry-btn" type="button">Try again</button>
+        </div>
+      </section>
+
+      <!-- ---------------- NOTIFICATIONS ---------------- -->
+      <section id="page-notifications" class="page hidden">
+        <div class="toolbar">
+          <div class="panel-header panel-header-inline">
+            <h2>Notifications</h2>
+            <p>Everything that needs your attention, newest first.</p>
+          </div>
+          <div class="toolbar-actions">
+            <button id="notifications-refresh-btn" class="btn btn-secondary" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <ul id="notifications-page-list" class="notifications-page-list"></ul>
+        <div id="notifications-loading" class="table-state" hidden>
+          <div class="spinner"></div><span>Loading notifications…</span>
+        </div>
+        <div id="notifications-empty" class="table-state" hidden>
+          <span class="empty-icon">◈</span>
+          <p>You're all caught up</p>
+          <span>New notifications will show up here.</span>
+        </div>
+        <div id="notifications-error" class="table-state" hidden>
+          <span class="empty-icon">⚠</span>
+          <p>Couldn't load notifications</p>
+          <span id="notifications-error-text">Something went wrong.</span>
+          <button class="btn btn-secondary btn-sm" id="notifications-retry-btn" type="button">Try again</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============================= MODALS ============================= -->
+
+<div id="create-shipment-modal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="create-shipment-title">
+    <div class="modal-header">
+      <h2 id="create-shipment-title">New shipment</h2>
+      <button class="modal-close-btn" data-close-modal="create-shipment-modal" aria-label="Close">✕</button>
+    </div>
+    <form id="create-shipment-form" class="modal-form">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="cs-sender-name">Sender name</label>
+          <input type="text" id="cs-sender-name" name="sender_name" required />
+        </div>
+        <div class="form-field">
+          <label for="cs-receiver-name">Receiver name</label>
+          <input type="text" id="cs-receiver-name" name="receiver_name" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="cs-origin">Origin</label>
+          <input type="text" id="cs-origin" name="origin" placeholder="e.g. Hyderabad" required />
+        </div>
+        <div class="form-field">
+          <label for="cs-destination">Destination</label>
+          <input type="text" id="cs-destination" name="destination" placeholder="e.g. Bangalore" required />
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="cs-eta">Estimated delivery</label>
+        <input type="date" id="cs-eta" name="estimated_delivery" required />
+      </div>
+
+      <div id="create-shipment-error" class="form-error" role="alert" hidden></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal="create-shipment-modal">Cancel</button>
+        <button type="submit" id="create-shipment-submit-btn" class="btn btn-primary">
+          <span class="btn-label">Create shipment</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="create-driver-modal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="create-driver-title">
+    <div class="modal-header">
+      <h2 id="create-driver-title">New driver</h2>
+      <button class="modal-close-btn" data-close-modal="create-driver-modal" aria-label="Close">✕</button>
+    </div>
+    <form id="create-driver-form" class="modal-form">
+      <div class="form-field">
+        <label for="cd-name">Full name</label>
+        <input type="text" id="cd-name" name="name" required />
+      </div>
+      <div class="form-field">
+        <label for="cd-phone">Phone number</label>
+        <input type="tel" id="cd-phone" name="phone" placeholder="e.g. +91 98765 43210" />
+      </div>
+      <div class="form-field">
+        <label for="cd-vehicle">Vehicle number</label>
+        <input type="text" id="cd-vehicle" name="vehicle_number" placeholder="e.g. TS09AB1234" />
+      </div>
+
+      <div id="create-driver-error" class="form-error" role="alert" hidden></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal="create-driver-modal">Cancel</button>
+        <button type="submit" id="create-driver-submit-btn" class="btn btn-primary">
+          <span class="btn-label">Add driver</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="tracking-modal" class="modal-overlay" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="tracking-modal-title">
+    <div class="modal-header">
+      <h2 id="tracking-modal-title">Shipment tracking</h2>
+      <button class="modal-close-btn" data-close-modal="tracking-modal" aria-label="Close">✕</button>
+    </div>
+    <div id="tracking-modal-body" class="modal-body"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
