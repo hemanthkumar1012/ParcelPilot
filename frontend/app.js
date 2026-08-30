@@ -860,23 +860,10 @@ function showApp() {
 
   document.body.classList.add("app-active");
 
-  /*
-   * Update the user information in the
-   * sidebar and header first.
-   */
   updateUserUI();
   updateGuestUI();
 
-  /*
-   * ==========================================================
-   * GUEST / RECRUITER DEMO MODE
-   * ==========================================================
-   *
-   * Guests must never depend on protected API calls.
-   * All demonstration data is already stored locally.
-   */
   if (isGuest()) {
-
     state.currentPage = "dashboard";
 
     state.user = {
@@ -884,14 +871,8 @@ function showApp() {
       email: "Recruiter Demo"
     };
 
-    /*
-     * Load a fresh copy of the demonstration dataset.
-     */
     cloneGuestData();
 
-    /*
-     * Show the persistent demo indicator.
-     */
     const guestBadge =
       $("guest-mode-badge");
 
@@ -901,10 +882,6 @@ function showApp() {
         "DEMO MODE · READ ONLY";
     }
 
-    /*
-     * Show the recruiter-facing dashboard banner
-     * when it exists in index.html.
-     */
     const demoBanner =
       $("guest-demo-banner");
 
@@ -912,23 +889,10 @@ function showApp() {
       demoBanner.hidden = false;
     }
 
-    /*
-     * Open the dashboard immediately.
-     *
-     * setActivePage() already knows how to render
-     * Guest Mode without calling the protected API.
-     */
     setActivePage("dashboard");
 
     return;
   }
-
-
-  /*
-   * ==========================================================
-   * NORMAL AUTHENTICATED MODE
-   * ==========================================================
-   */
 
   const guestBadge =
     $("guest-mode-badge");
@@ -944,53 +908,8 @@ function showApp() {
     demoBanner.hidden = true;
   }
 
-  /*
-   * Open the normal authenticated dashboard.
-   */
   setActivePage("dashboard");
 }
-  function updateUserUI() {
-    const user =
-      state.user || {
-        full_name: "Operator",
-        email: ""
-      };
-
-    const name =
-      user.full_name ||
-      user.name ||
-      user.username ||
-      "Operator";
-
-    const email =
-      user.email ||
-      "";
-
-    const initials =
-      getInitials(name);
-
-    const sidebarAvatar =
-      $("sidebar-user-avatar");
-
-    const headerAvatar =
-      $("header-user-avatar");
-
-    const sidebarName =
-      $("sidebar-user-name");
-
-    const sidebarEmail =
-      $("sidebar-user-email");
-
-    if (sidebarAvatar) {
-      sidebarAvatar.textContent =
-        initials;
-    }
-
-    if (headerAvatar) {
-      headerAvatar.textContent =
-        initials;
-    }
-
     if (sidebarName) {
       sidebarName.textContent =
         name;
