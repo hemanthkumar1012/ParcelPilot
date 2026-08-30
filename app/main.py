@@ -14,23 +14,47 @@ from fastapi import APIRouter
 import os
 import logging
 
-# Centralized Logging Configuration
+
+# ============================================================
+# LOGGING
+# ============================================================
+
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
 logger = logging.getLogger("parcelpilot")
+
+
+# ============================================================
+# APPLICATION LIFESPAN
+# ============================================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        # In production, migrations should be handled by Alembic.
-        # We only auto-create tables for SQLite in tests or testdb.
-        if "sqlite" in settings.DATABASE_URL or "testdb" in settings.DATABASE_URL:
+        # In production, database migrations should be handled
+        # by Alembic.
+        #
+        # We only auto-create tables for SQLite/test databases.
+        if (
+            "sqlite" in settings.DATABASE_URL
+            or "testdb" in settings.DATABASE_URL
+        ):
             Base.metadata.create_all(bind=engine)
+
     except Exception as e:
-        logger.warning(f"Could not create tables: {e}")
+        logger.warning(
+            f"Could not create tables: {e}"
+        )
+
     yield
+
+
+# ============================================================
+# FASTAPI APPLICATION
+# ============================================================
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -39,10 +63,22 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Exception Handlers
+
+# ============================================================
+# EXCEPTION HANDLERS
+# ============================================================
+
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    req_id = getattr(request.state, "request_id", "")
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError
+):
+    req_id = getattr(
+        request.state,
+        "request_id",
+        ""
+    )
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -52,21 +88,45 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                 "details": exc.errors()
             }
         },
-        headers={"X-Request-ID": req_id} if req_id else {}
+        headers={
+            "X-Request-ID": req_id
+        } if req_id else {}
     )
 
+
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    req_id = getattr(request.state, "request_id", "")
-    headers = getattr(exc, "headers", None) or {}
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException
+):
+    req_id = getattr(
+        request.state,
+        "request_id",
+        ""
+    )
+
+    headers = getattr(
+        exc,
+        "headers",
+        None
+    ) or {}
+
     if req_id:
         headers["X-Request-ID"] = req_id
 
     code = "HTTP_ERROR"
     message = exc.detail
+
     if isinstance(exc.detail, dict):
-        code = exc.detail.get("code", "HTTP_ERROR")
-        message = exc.detail.get("message", "Unknown error")
+        code = exc.detail.get(
+            "code",
+            "HTTP_ERROR"
+        )
+
+        message = exc.detail.get(
+            "message",
+            "Unknown error"
+        )
 
     return JSONResponse(
         status_code=exc.status_code,
@@ -79,10 +139,23 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         headers=headers
     )
 
+
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
-    req_id = getattr(request.state, "request_id", "")
+async def general_exception_handler(
+    request: Request,
+    exc: Exception
+):
+    logger.error(
+        f"Unhandled exception: {str(exc)}",
+        exc_info=True
+    )
+
+    req_id = getattr(
+        request.state,
+        "request_id",
+        ""
+    )
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -91,11 +164,20 @@ async def general_exception_handler(request: Request, exc: Exception):
                 "message": "An unexpected error occurred."
             }
         },
-        headers={"X-Request-ID": req_id} if req_id else {}
+        headers={
+            "X-Request-ID": req_id
+        } if req_id else {}
     )
 
-# Middleware
-app.add_middleware(ObservabilityMiddleware)
+
+# ============================================================
+# MIDDLEWARE
+# ============================================================
+
+app.add_middleware(
+    ObservabilityMiddleware
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -104,26 +186,111 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Canonical API v1
-api_v1_router = APIRouter(prefix="/api/v1")
-api_v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
-api_v1_router.include_router(shipments.router, prefix="/shipments", tags=["shipments"])
-api_v1_router.include_router(drivers.router, prefix="/drivers", tags=["drivers"])
-api_v1_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
-app.include_router(api_v1_router)
 
-# Compatibility aliases
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"], include_in_schema=False)
-app.include_router(shipments.router, prefix="/api/shipments", tags=["shipments"], include_in_schema=False)
-app.include_router(drivers.router, prefix="/api/drivers", tags=["drivers"], include_in_schema=False)
-app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"], include_in_schema=False)
+# ============================================================
+# CANONICAL API V1
+# ============================================================
 
-# Health & Readiness
-app.include_router(health.router)
+api_v1_router = APIRouter(
+    prefix="/api/v1"
+)
+
+
+api_v1_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["auth"]
+)
+
+
+api_v1_router.include_router(
+    shipments.router,
+    prefix="/shipments",
+    tags=["shipments"]
+)
+
+
+api_v1_router.include_router(
+    drivers.router,
+    prefix="/drivers",
+    tags=["drivers"]
+)
+
+
+api_v1_router.include_router(
+    notifications.router,
+    prefix="/notifications",
+    tags=["notifications"]
+)
+
+
+app.include_router(
+    api_v1_router
+)
+
+
+# ============================================================
+# COMPATIBILITY API ALIASES
+# ============================================================
+
+app.include_router(
+    auth.router,
+    prefix="/api/auth",
+    tags=["auth"],
+    include_in_schema=False
+)
+
+
+app.include_router(
+    shipments.router,
+    prefix="/api/shipments",
+    tags=["shipments"],
+    include_in_schema=False
+)
+
+
+app.include_router(
+    drivers.router,
+    prefix="/api/drivers",
+    tags=["drivers"],
+    include_in_schema=False
+)
+
+
+app.include_router(
+    notifications.router,
+    prefix="/api/notifications",
+    tags=["notifications"],
+    include_in_schema=False
+)
+
+
+# ============================================================
+# HEALTH & READINESS
+# ============================================================
+
+app.include_router(
+    health.router
+)
+
 
 # ============================================================
 # FRONTEND
 # ============================================================
+
+# Project structure:
+#
+# ParcelPilot/
+# ├── app/
+# │   └── main.py
+# │
+# └── frontend/
+#     ├── index.html
+#     ├── style.css
+#     └── app.js
+#
+# main.py is inside app/, so we go one directory up and
+# then into frontend/.
 
 frontend_dir = os.path.abspath(
     os.path.join(
@@ -133,12 +300,21 @@ frontend_dir = os.path.abspath(
     )
 )
 
+
 if not os.path.isdir(frontend_dir):
+
     logger.warning(
         "Frontend directory not found: %s",
         frontend_dir
     )
+
 else:
+
+    logger.info(
+        "Serving frontend from: %s",
+        frontend_dir
+    )
+
     app.mount(
         "/",
         StaticFiles(
@@ -146,6 +322,4 @@ else:
             html=True
         ),
         name="frontend"
-    )
-        )
     )
