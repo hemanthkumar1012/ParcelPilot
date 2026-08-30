@@ -858,26 +858,80 @@
     appScreen.hidden = false;
   }
 
-  document.body.classList.add(
-    "app-active"
-  );
-
-  updateUserUI();
-  updateGuestUI();
+  document.body.classList.add("app-active");
 
   /*
-   * Guest Mode:
-   * use the demo data already loaded into state.
-   * Do not request protected backend data.
+   * Guest / HR demo mode
    */
-  if (state.guest) {
+  if (isGuest()) {
+    state.currentPage = "dashboard";
+
+    /*
+     * Demo identity
+     */
+    state.user = {
+      full_name: "Guest Viewer",
+      email: "Recruiter Demo"
+    };
+
+    /*
+     * Make sure the demo data is available.
+     */
+    cloneGuestData();
+
+    /*
+     * Update sidebar/header.
+     */
+    updateUserUI();
+    updateGuestUI();
+
+    /*
+     * Explicit demo indicator.
+     */
     const guestBadge =
       $("guest-mode-badge");
 
     if (guestBadge) {
       guestBadge.hidden = false;
+      guestBadge.textContent =
+        "DEMO MODE · READ ONLY";
     }
 
+    /*
+     * Open dashboard immediately.
+     */
+    navigateTo("dashboard");
+
+    /*
+     * Render dashboard directly from
+     * the local demo dataset.
+     */
+    renderDashboard();
+
+    /*
+     * No protected API requests in Guest Mode.
+     */
+    return;
+  }
+
+  /*
+   * Normal authenticated user.
+   */
+  const guestBadge =
+    $("guest-mode-badge");
+
+  if (guestBadge) {
+    guestBadge.hidden = true;
+  }
+
+  updateUserUI();
+  updateGuestUI();
+
+  navigateTo("dashboard");
+
+  loadDashboard();
+  refreshNotificationBadge();
+}
     navigateTo(
       "dashboard"
     );
