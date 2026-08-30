@@ -38,10 +38,19 @@ Once the application is running, navigate to:
 ## Testing
 
 The project uses `pytest` for automated testing.
-To run the complete test suite:
+
+### Fast tests
+To run the complete fast test suite (uses isolated SQLite memory database):
 ```bash
-pytest
+pytest --ignore=tests/test_postgres_integration.py
 ```
+
+### PostgreSQL integration tests
+To run tests against a real PostgreSQL engine, start a PostgreSQL instance (e.g. via Docker Compose) and run:
+```bash
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/testdb pytest tests/test_postgres_integration.py
+```
+*(Do not run integration tests against a production database, as tables are dropped/recreated.)*
 
 ## Continuous Integration (CI)
 
