@@ -11,12 +11,14 @@ router = APIRouter()
 
 @router.post("", response_model=DriverResponse, status_code=201)
 def create_driver(driver_in: DriverCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Register a new driver profile (Admin only)."""
     if current_user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can create drivers")
     return driver_service.create_driver(db, driver_in)
 
 @router.get("", response_model=List[DriverResponse])
 def list_drivers(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """List all drivers and their assignments (Admin only)."""
     if current_user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can view drivers")
     return driver_service.list_drivers(db)
