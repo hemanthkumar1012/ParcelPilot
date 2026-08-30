@@ -10,16 +10,16 @@ async function init() {
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('Unauthenticated');
         currentUser = await res.json();
-        
+
         document.getElementById('user-name').innerText = currentUser.name;
         document.getElementById('user-role').innerText = currentUser.role;
-        
+
         if (currentUser.role === 'ADMIN') { document.getElementById('nav-drivers').style.display = 'block'; loadDrivers(); }
         if (currentUser.role === 'CUSTOMER') {
             document.getElementById('dashboard-title').innerText = "My Shipments";
             document.getElementById('create-shipment-btn').style.display = 'block';
         }
-        
+
         await loadShipments();
     } catch (e) {
         logout();
@@ -29,14 +29,14 @@ async function init() {
 async function loadShipments() {
     const tbody = document.getElementById('shipments-tbody');
     tbody.innerHTML = '<tr><td colspan="7" class="state-message">Loading shipments...</td></tr>';
-    
+
     try {
         const res = await fetch(`/api/shipments?skip=0&limit=100`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('Failed to load shipments');
-        
+
         const data = await res.json();
         allShipments = data.items;
-        
+
         updateStats();
         renderTable();
     } catch (e) {
@@ -67,10 +67,10 @@ function renderTable() {
     const statusF = document.getElementById('status-filter').value;
     const tbody = document.getElementById('shipments-tbody');
     tbody.innerHTML = '';
-    
+
     let filtered = allShipments.filter(s => {
-        const matchSearch = s.tracking_id.toLowerCase().includes(search) || 
-                            s.sender_name.toLowerCase().includes(search) || 
+        const matchSearch = s.tracking_id.toLowerCase().includes(search) ||
+                            s.sender_name.toLowerCase().includes(search) ||
                             s.receiver_name.toLowerCase().includes(search);
         const matchStatus = statusF ? s.current_status === statusF : true;
         return matchSearch && matchStatus;
@@ -107,7 +107,7 @@ async function openModal(id) {
     const successDiv = document.getElementById('update-success');
     errDiv.style.display = 'none';
     if(successDiv) successDiv.style.display = 'none';
-    
+
     const timeline = document.getElementById('modal-timeline');
     timeline.innerHTML = '<div class="state-message">Loading details...</div>';
     document.getElementById('modal').style.display = 'flex';
@@ -116,34 +116,60 @@ async function openModal(id) {
         const res = await fetch(`/api/shipments/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('Failed to load details');
         const data = await res.json();
-        
+
         document.getElementById('modal-tracking-id').innerText = data.tracking_id;
         document.getElementById('modal-status').innerText = data.current_status.replace(/_/g, ' ');
         document.getElementById('modal-status').className = `badge ${data.current_status.toLowerCase()}`;
         document.getElementById('modal-customer').innerText = data.customer_id;
         document.getElementById('modal-origin').innerText = data.origin;
         document.getElementById('modal-destination').innerText = data.destination;
-        
+
         timeline.innerHTML = '';
-        if (data.tracking_events.length === 0) {
-            timeline.innerHTML = '<div class="state-message">No events found.</div>';
-        } else {
-            data.tracking_events.forEach(ev => {
-                timeline.innerHTML += `<div class="event">
-                    <div class="date">${new Date(ev.created_at).toLocaleString()}</div>
-                    <div class="desc"><strong>${ev.status.replace(/_/g, ' ')}</strong> - ${ev.description}</div>
-                    ${ev.location ? `<div class="loc">${ev.location}</div>` : ''}
+        const canonicalStates = ['CREATED', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+        let reachedCurrent = false;
+
+        canonicalStates.forEach((state, index) => {
+            const ev = data.tracking_events.slice().reverse().find(e => e.status === state);
+            let icon = '○';
+            let extra = '';
+
+            if (ev) {
+                icon = (state === data.current_status) ? '●' : '✓';
+                if (state === data.current_status) reachedCurrent = true;
+                if (!reachedCurrent && state !== data.current_status) icon = '✓';
+                extra = `<div style="font-size: 0.8rem; color: #94a3b8;">${new Date(ev.created_at).toLocaleString()} - ${ev.description}</div>`;
+            } else if (!reachedCurrent && canonicalStates.indexOf(data.current_status) > index) {
+                icon = '✓'; // It was skipped but we are past it
+            }
+
+            timeline.innerHTML += `<div style="margin-bottom: 0.5rem; font-family: monospace; font-size: 1.1rem;">
+                ${icon} ${state.replace(/_/g, ' ')}
+                ${extra}
+            </div>`;
+            if (index < canonicalStates.length - 1) {
+                timeline.innerHTML += `<div style="margin-left: 0.4rem; color: #475569;">|</div>`;
+            }
+        });
+
+        // Render any events not in canonical (e.g. FAILED, CANCELLED) at the bottom
+        const nonCanonical = data.tracking_events.filter(e => !canonicalStates.includes(e.status));
+        if (nonCanonical.length > 0) {
+            timeline.innerHTML += `<div style="margin-top: 1rem; border-top: 1px solid #334155; padding-top: 0.5rem;"><strong>Other Events</strong></div>`;
+            nonCanonical.forEach(ev => {
+                timeline.innerHTML += `<div style="margin-bottom: 0.5rem; font-family: monospace; font-size: 1rem; color: #ef4444;">
+                    ⚠ ${ev.status.replace(/_/g, ' ')}
+                    <div style="font-size: 0.8rem; color: #94a3b8;">${new Date(ev.created_at).toLocaleString()} - ${ev.description}</div>
                 </div>`;
             });
         }
-        
+
         if (currentUser.role === 'ADMIN') {
             document.getElementById('admin-update').style.display = 'block'; document.getElementById('admin-assign').style.display = 'block';
             document.getElementById('new-status').value = data.current_status;
         } else {
             document.getElementById('admin-update').style.display = 'none'; document.getElementById('admin-assign').style.display = 'none';
         }
-        
+
     } catch (e) {
         timeline.innerHTML = '<div class="state-message error">Unable to load details.</div>';
     }
@@ -155,10 +181,10 @@ async function updateStatus() {
     const desc = document.getElementById('new-desc').value;
     const errDiv = document.getElementById('update-err');
     const successDiv = document.getElementById('update-success');
-    
+
     errDiv.style.display = 'none';
     successDiv.style.display = 'none';
-    
+
     if (!desc) {
         errDiv.innerText = "Description is required.";
         errDiv.style.display = 'block';
@@ -174,17 +200,17 @@ async function updateStatus() {
             },
             body: JSON.stringify({ status: status, location: loc || null, description: desc })
         });
-        
+
         if (!res.ok) {
             const err = await res.json();
-            errDiv.innerText = err.detail || "Update failed.";
+            errDiv.innerText = (err.error && err.error.message) ? err.error.message : (err.detail || "Update failed.");
             errDiv.style.display = 'block';
         } else {
             successDiv.innerText = "Status updated successfully!";
             successDiv.style.display = 'block';
             document.getElementById('new-loc').value = '';
             document.getElementById('new-desc').value = '';
-            
+
             // Refresh data from backend as the single source of truth
             await openModal(currentShipmentId);
             await loadShipments();
@@ -228,17 +254,17 @@ async function submitCreateShipment(event) {
     const btn = document.getElementById('create-submit-btn');
     const errDiv = document.getElementById('create-err');
     const successDiv = document.getElementById('create-success');
-    
+
     errDiv.style.display = 'none';
     successDiv.style.display = 'none';
-    
+
     const payload = {
         sender_name: document.getElementById('create-sender').value.trim(),
         receiver_name: document.getElementById('create-receiver').value.trim(),
         origin: document.getElementById('create-origin').value.trim(),
         destination: document.getElementById('create-dest').value.trim(),
     };
-    
+
     const eta = document.getElementById('create-eta').value;
     if (eta) {
         payload.estimated_delivery = new Date(eta).toISOString();
@@ -256,20 +282,20 @@ async function submitCreateShipment(event) {
             },
             body: JSON.stringify(payload)
         });
-        
+
         if (!res.ok) {
             const err = await res.json();
             throw new Error(err.detail || 'Validation failed or database error.');
         }
-        
+
         const data = await res.json();
         successDiv.innerText = `Shipment created successfully! Tracking ID: ${data.tracking_id}`;
         successDiv.style.display = 'block';
         document.getElementById('create-form').reset();
-        
+
         // Refresh the single source of truth table and stats
         await loadShipments();
-        
+
         // Automatically close after a short delay
         setTimeout(() => closeCreateModal(), 2500);
     } catch (e) {
@@ -319,7 +345,7 @@ async function loadDrivers() {
                             <td>${d.assigned_shipments_count}</td>`;
             tbody.appendChild(tr);
         });
-        
+
         // Populate assignment dropdown
         const sel = document.getElementById('assign-driver-select');
         sel.innerHTML = '<option value="">Select Driver</option>';

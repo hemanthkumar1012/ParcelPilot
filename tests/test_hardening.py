@@ -66,8 +66,8 @@ def test_status_transitions(client, auth_admin, auth_customer1):
     r3 = client.patch(f"/api/shipments/{s1_id}/status", json={"status": "IN_TRANSIT", "description": "cust"}, headers=auth_customer1)
     assert r3.status_code == 403
     
-    # valid transition CREATED -> PICKED_UP
-    r4 = client.patch(f"/api/shipments/{s1_id}/status", json={"status": "PICKED_UP", "description": "ok"}, headers=auth_admin)
+    # valid transition CREATED -> ASSIGNED
+    r4 = client.patch(f"/api/shipments/{s1_id}/status", json={"status": "ASSIGNED", "description": "ok"}, headers=auth_admin)
     assert r4.status_code == 200
     
     # tracking history maintained
@@ -75,7 +75,7 @@ def test_status_transitions(client, auth_admin, auth_customer1):
     events = r5.json()["tracking_events"]
     assert len(events) == 2
     assert events[0]["status"] == "CREATED"
-    assert events[1]["status"] == "PICKED_UP"
+    assert events[1]["status"] == "ASSIGNED"
 
 def test_driver_assignment_integrity(client, auth_admin, auth_customer1):
     r1 = client.post("/api/shipments", json={"sender_name": "A", "receiver_name": "B", "origin": "C", "destination": "D"}, headers=auth_customer1)

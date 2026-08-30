@@ -59,12 +59,18 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     if req_id:
         headers["X-Request-ID"] = req_id
 
+    code = "HTTP_ERROR"
+    message = exc.detail
+    if isinstance(exc.detail, dict):
+        code = exc.detail.get("code", "HTTP_ERROR")
+        message = exc.detail.get("message", "Unknown error")
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "error": {
-                "code": "HTTP_ERROR",
-                "message": exc.detail
+                "code": code,
+                "message": message
             }
         },
         headers=headers

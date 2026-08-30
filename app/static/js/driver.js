@@ -10,11 +10,11 @@ async function init() {
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('Unauthenticated');
         currentUser = await res.json();
-        
+
         if(currentUser.role !== 'DRIVER') {
             window.location.href = '/dashboard';
         }
-        
+
         document.getElementById('user-name').innerText = currentUser.name;
         await loadShipments();
     } catch (e) {
@@ -28,7 +28,7 @@ async function loadShipments() {
         const res = await fetch(`/api/shipments?skip=0&limit=100`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
         allShipments = data.items;
-        
+
         updateStats();
         renderTable();
     } catch (e) {
@@ -51,7 +51,7 @@ function updateStats() {
 function renderTable() {
     const tbody = document.getElementById('shipments-tbody');
     tbody.innerHTML = '';
-    
+
     if (allShipments.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="state-message">No assignments found.</td></tr>';
         return;
@@ -78,29 +78,79 @@ async function openModal(id) {
     const successDiv = document.getElementById('update-success');
     errDiv.style.display = 'none';
     successDiv.style.display = 'none';
-    
+
     const timeline = document.getElementById('modal-timeline');
     document.getElementById('modal').style.display = 'flex';
 
     try {
         const res = await fetch(`/api/shipments/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
-        
+
         document.getElementById('modal-tracking-id').innerText = data.tracking_id;
         document.getElementById('modal-status').innerText = data.current_status.replace(/_/g, ' ');
         document.getElementById('modal-status').className = `badge ${data.current_status.toLowerCase()}`;
         document.getElementById('modal-origin').innerText = data.origin;
         document.getElementById('modal-destination').innerText = data.destination;
-        document.getElementById('new-status').value = data.current_status;
-        
+
+        const nextStateMap = {
+            'ASSIGNED': 'PICKED_UP',
+            'PICKED_UP': 'IN_TRANSIT',
+            'IN_TRANSIT': 'OUT_FOR_DELIVERY',
+            'OUT_FOR_DELIVERY': 'DELIVERED',
+            'FAILED': 'OUT_FOR_DELIVERY' // Optional retry
+        };
+        const nextState = nextStateMap[data.current_status];
+        const statusSelect = document.getElementById('new-status');
+
+        if (nextState) {
+            statusSelect.innerHTML = `<option value="${nextState}">Next: ${nextState.replace(/_/g, ' ')}</option>`;
+            if (data.current_status === 'OUT_FOR_DELIVERY') {
+                statusSelect.innerHTML += `<option value="FAILED">Mark Failed</option>`;
+            }
+            if (data.current_status === 'IN_TRANSIT') {
+                statusSelect.innerHTML += `<option value="FAILED">Mark Failed</option>`;
+            }
+        } else {
+            statusSelect.innerHTML = `<option value="">No further actions</option>`;
+        }
+
         timeline.innerHTML = '';
-        data.tracking_events.forEach(ev => {
-            timeline.innerHTML += `<div class="event">
-                <div class="date">${new Date(ev.created_at).toLocaleString()}</div>
-                <div class="desc"><strong>${ev.status.replace(/_/g, ' ')}</strong> - ${ev.description}</div>
-                ${ev.location ? `<div class="loc">${ev.location}</div>` : ''}
+        const canonicalStates = ['CREATED', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+        let reachedCurrent = false;
+
+        canonicalStates.forEach((state, index) => {
+            const ev = data.tracking_events.slice().reverse().find(e => e.status === state);
+            let icon = '○';
+            let extra = '';
+
+            if (ev) {
+                icon = (state === data.current_status) ? '●' : '✓';
+                if (state === data.current_status) reachedCurrent = true;
+                if (!reachedCurrent && state !== data.current_status) icon = '✓';
+                extra = `<div style="font-size: 0.8rem; color: #94a3b8;">${new Date(ev.created_at).toLocaleString()} - ${ev.description}</div>`;
+            } else if (!reachedCurrent && canonicalStates.indexOf(data.current_status) > index) {
+                icon = '✓';
+            }
+
+            timeline.innerHTML += `<div style="margin-bottom: 0.5rem; font-family: monospace; font-size: 1.1rem;">
+                ${icon} ${state.replace(/_/g, ' ')}
+                ${extra}
             </div>`;
+            if (index < canonicalStates.length - 1) {
+                timeline.innerHTML += `<div style="margin-left: 0.4rem; color: #475569;">|</div>`;
+            }
         });
+
+        const nonCanonical = data.tracking_events.filter(e => !canonicalStates.includes(e.status));
+        if (nonCanonical.length > 0) {
+            timeline.innerHTML += `<div style="margin-top: 1rem; border-top: 1px solid #334155; padding-top: 0.5rem;"><strong>Other Events</strong></div>`;
+            nonCanonical.forEach(ev => {
+                timeline.innerHTML += `<div style="margin-bottom: 0.5rem; font-family: monospace; font-size: 1rem; color: #ef4444;">
+                    ⚠ ${ev.status.replace(/_/g, ' ')}
+                    <div style="font-size: 0.8rem; color: #94a3b8;">${new Date(ev.created_at).toLocaleString()} - ${ev.description}</div>
+                </div>`;
+            });
+        }
     } catch (e) {
         timeline.innerHTML = '<div class="state-message error">Unable to load details.</div>';
     }
@@ -112,9 +162,9 @@ async function updateStatus() {
     const desc = document.getElementById('new-desc').value;
     const errDiv = document.getElementById('update-err');
     const successDiv = document.getElementById('update-success');
-    
+
     errDiv.style.display = 'none';
-    
+
     if (!desc) {
         errDiv.innerText = "Description is required.";
         errDiv.style.display = 'block';
@@ -127,10 +177,10 @@ async function updateStatus() {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: status, location: loc || null, description: desc })
         });
-        
+
         if (!res.ok) {
             const err = await res.json();
-            errDiv.innerText = err.detail || "Update failed.";
+            errDiv.innerText = (err.error && err.error.message) ? err.error.message : (err.detail || "Update failed.");
             errDiv.style.display = 'block';
         } else {
             successDiv.innerText = "Status updated successfully!";
