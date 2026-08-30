@@ -1,39 +1,55 @@
 # ParcelPilot
 
-ParcelPilot is a production-style logistics and parcel tracking platform.
+ParcelPilot is a production-style logistics and parcel tracking platform built with FastAPI and PostgreSQL.
 
-## Setup
+## Local Development
 
-1. Create a virtual environment: `python -m venv venv`
-2. Activate the virtual environment: `.\venv\Scripts\activate`
-3. Install dependencies: `pip install -r requirements.txt`
-4. Run the application: `uvicorn app.main:app --reload`
+To run the application locally without Docker for the application:
 
-## API Endpoints
+1. Clone the repository: `git clone https://github.com/hemanthkumar1012/ParcelPilot.git`
+2. Create a `.env` file based on `.env.example`
+3. Start the PostgreSQL database:
+   ```bash
+   docker compose up -d postgres
+   ```
+4. Install dependencies: `pip install -r requirements.txt`
+5. Run tests to ensure everything is working:
+   ```bash
+   pytest
+   ```
+6. Start the FastAPI application:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
 
-- `GET /health` : Health check
-- `POST /api/auth/register` : Register a new user
-- `POST /api/auth/login` : Login to receive a JWT access token
-- `GET /api/auth/me` : Get the currently authenticated user's information
+## Docker (Complete Stack)
 
-## Local Development with Docker PostgreSQL
-
-To run the database locally:
+To run both the FastAPI application and PostgreSQL using Docker Compose:
 ```bash
 docker compose up -d
 ```
 
-Start the FastAPI application:
+## API Documentation
+
+FastAPI automatically generates interactive API documentation.
+Once the application is running, navigate to:
+- Swagger UI: `http://localhost:8000/docs`
+
+## Testing
+
+The project uses `pytest` for automated testing.
+To run the complete test suite:
 ```bash
-uvicorn app.main:app --reload
+pytest
 ```
 
-## Dynamic Architecture
+## Continuous Integration (CI)
 
-ParcelPilot is a **real dynamic web application**, not a static portfolio. 
+This project uses GitHub Actions for CI. The workflow is configured in `.github/workflows/ci.yml` and automatically runs the test suite on all pushes and pull requests to the `main` branch.
+
+## Architecture
 
 The architecture strictly follows this data flow:
 `Browser (Vanilla JS)` -> `FastAPI REST API` -> `PostgreSQL Database`
 
 Every shipment, tracking event, and statistic displayed in the dashboards is retrieved dynamically from the backend using asynchronous `fetch()` calls.
-The FastAPI backend acts as the single source of truth for business logic, status transitions, and data storage.
