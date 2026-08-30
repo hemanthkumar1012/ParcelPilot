@@ -776,3 +776,133 @@ input { font-family: inherit; }
   .form-row { grid-template-columns: 1fr; }
   .toast-container { left: 12px; right: 12px; max-width: none; }
 }
+/* ============================================================
+   PARCELPILOT LOGIN LAYOUT FIX
+   ============================================================ */
+
+.login-screen {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) !important;
+  grid-template-rows: 1fr !important;
+  width: 100%;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.login-brand {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.login-form-panel {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.login-form-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.guest-mode-btn {
+  width: 100%;
+}
+
+.guest-mode-copy {
+  margin: 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.guest-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 7px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--warning-bg);
+  color: #B54708;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.guest-mode-badge[hidden] {
+  display: none !important;
+}
+
+@media (min-width: 901px) {
+  .login-screen {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) !important;
+    grid-template-rows: 1fr !important;
+  }
+
+  .login-brand {
+    display: flex !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .login-form-panel {
+    display: flex !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .login-screen {
+    display: block !important;
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .login-brand {
+    display: none !important;
+  }
+
+  .login-form-panel {
+    display: flex !important;
+    min-height: 100vh;
+    padding: 32px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-form-panel {
+    padding: 24px 16px;
+  }
+
+  .login-form-card {
+    max-width: 100%;
+  }
+}
