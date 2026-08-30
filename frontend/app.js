@@ -765,9 +765,9 @@
     );
 
     state.user = {
-      full_name: "Guest Viewer",
-      email: "Demo account"
-    };
+  full_name: "Guest Viewer",
+  email: "Recruiter Demo"
+};
 
     cloneGuestData();
 
