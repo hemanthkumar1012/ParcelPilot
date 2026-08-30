@@ -102,14 +102,18 @@ def test_pg_tracking_integrity(pg_client, pg_session):
     res_s = pg_client.post("/api/shipments", json={"sender_name": "S", "receiver_name": "R", "origin": "O", "destination": "D"}, headers={"Authorization": f"Bearer {t_c}"})
     s_id = res_s.json()["id"]
     
+    res_up_assign = pg_client.patch(f"/api/shipments/{s_id}/status", json={"status": "ASSIGNED", "description": "assign"}, headers={"Authorization": f"Bearer {t_admin}"})
+    assert res_up_assign.status_code == 200
+
     res_up = pg_client.patch(f"/api/shipments/{s_id}/status", json={"status": "PICKED_UP", "description": "pickup"}, headers={"Authorization": f"Bearer {t_admin}"})
     assert res_up.status_code == 200
     
     res_get = pg_client.get(f"/api/shipments/{s_id}", headers={"Authorization": f"Bearer {t_c}"})
     events = res_get.json()["tracking_events"]
-    assert len(events) == 2
+    assert len(events) == 3
     assert events[0]["status"] == "CREATED"
-    assert events[1]["status"] == "PICKED_UP"
+    assert events[1]["status"] == "ASSIGNED"
+    assert events[2]["status"] == "PICKED_UP"
 
 def test_pg_driver_fk_constraints(pg_client, pg_session):
     pg_client.post("/api/auth/register", json={"name": "A", "email": "a@a.com", "password": "password"})
