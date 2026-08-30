@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ParcelPilot Login</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; justify-content: center; align-items: center; margin: 0; }
+        .login-box { background: #1e293b; padding: 3rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
+        h1 { margin: 0 0 2rem; color: #38bdf8; text-align: center; }
+        input { width: 100%; padding: 0.75rem; margin-bottom: 1.5rem; background: #0f172a; border: 1px solid #334155; color: #f8fafc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 0.75rem; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #0ea5e9; }
+        .error { color: #ef4444; margin-bottom: 1rem; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>ParcelPilot</h1>
+        <div id="error" class="error"></div>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Sign In</button>
+    </div>
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const err = document.getElementById('error');
+            
+            const formData = new FormData();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            const res = await fetch('/api/auth/login', { method: 'POST', body: formData });
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem('token', data.access_token);
+                window.location.href = '/dashboard';
+            } else {
+                const data = await res.json();
+                err.innerText = data.detail;
+                err.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

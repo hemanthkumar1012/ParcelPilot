@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParcelPilot Tracking</title>
+    <link rel="stylesheet" href="/static/css/track.css">
+</head>
+<body>
+    <div class="tracking-container">
+        <header>
+            <h1 class="logo">ParcelPilot</h1>
+            <p>Track your shipment seamlessly.</p>
+        </header>
+
+        <main>
+            <div class="search-box">
+                <input type="text" id="tracking-id" placeholder="Enter tracking ID (e.g. PP-2026-123456)">
+                <button onclick="trackShipment()">Track</button>
+            </div>
+            
+            <div id="error-message" class="error" style="display: none;"></div>
+
+            <div id="tracking-result" style="display: none;">
+                <div class="shipment-info">
+                    <h2>Shipment <span id="res-tracking-id"></span></h2>
+                    <p><strong>Status:</strong> <span id="res-status" class="badge"></span></p>
+                    <p><strong>From:</strong> <span id="res-origin"></span> <strong>To:</strong> <span id="res-dest"></span></p>
+                </div>
+                
+                <div class="timeline" id="timeline">
+                    <!-- Events will be populated here -->
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/static/js/track.js"></script>
+</body>
+</html>
