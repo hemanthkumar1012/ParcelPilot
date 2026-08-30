@@ -846,31 +846,83 @@
   }
 
 
-  function showApp() {
-    const loginScreen = $("login-screen");
-    const appScreen = $("app-screen");
+ function showApp() {
+  const loginScreen = $("login-screen");
+  const appScreen = $("app-screen");
 
-    if (loginScreen) {
-      loginScreen.hidden = true;
-    }
-
-    if (appScreen) {
-      appScreen.hidden = false;
-    }
-
-    document.body.classList.add(
-      "app-active"
-    );
-
-    updateUserUI();
-    updateGuestUI();
-
-    setActivePage(
-      state.currentPage || "dashboard"
-    );
+  if (loginScreen) {
+    loginScreen.hidden = true;
   }
 
+  if (appScreen) {
+    appScreen.hidden = false;
+  }
 
+  document.body.classList.add(
+    "app-active"
+  );
+
+  updateUserUI();
+  updateGuestUI();
+
+  /*
+   * Guest Mode:
+   * use the demo data already loaded into state.
+   * Do not request protected backend data.
+   */
+  if (state.guest) {
+    const guestBadge =
+      $("guest-mode-badge");
+
+    if (guestBadge) {
+      guestBadge.hidden = false;
+    }
+
+    navigateTo(
+      "dashboard"
+    );
+
+    renderStats(
+      state.shipments
+    );
+
+    renderActivityChart(
+      state.shipments
+    );
+
+    renderStatusDistribution(
+      state.shipments
+    );
+
+    renderRecentShipments(
+      state.shipments.slice(0, 6)
+    );
+
+    renderAlerts(
+      state.notifications
+    );
+
+    return;
+  }
+
+  /*
+   * Normal authenticated user.
+   */
+  const guestBadge =
+    $("guest-mode-badge");
+
+  if (guestBadge) {
+    guestBadge.hidden = true;
+  }
+
+  navigateTo(
+    "dashboard"
+  );
+
+  loadDashboard();
+
+  refreshNotificationBadge();
+}
   function updateUserUI() {
     const user =
       state.user || {
