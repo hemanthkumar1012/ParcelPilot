@@ -133,22 +133,19 @@ frontend_dir = os.path.abspath(
     )
 )
 
-if os.path.exists(frontend_dir):
+if not os.path.isdir(frontend_dir):
+    logger.warning(
+        "Frontend directory not found: %s",
+        frontend_dir
+    )
+else:
     app.mount(
-        "/frontend",
+        "/",
         StaticFiles(
             directory=frontend_dir,
             html=True
         ),
         name="frontend"
     )
-
-
-@app.get("/")
-def read_index():
-    return FileResponse(
-        os.path.join(
-            frontend_dir,
-            "index.html"
         )
     )
