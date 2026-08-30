@@ -43,13 +43,13 @@ jobs:
           
       - name: Run Pytest (SQLite)
         env:
-          SECRET_KEY: test-secret-key-for-pytest-only
+          SECRET_KEY: test-secret-key-for-pytest-only-32bytes
         run: |
           pytest --ignore=tests/test_postgres_integration.py
           
       - name: Run Pytest (PostgreSQL Integration)
         env:
-          SECRET_KEY: test-secret-key-for-pytest-only
+          SECRET_KEY: test-secret-key-for-pytest-only-32bytes
           TEST_DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
         run: |
           pytest tests/test_postgres_integration.py

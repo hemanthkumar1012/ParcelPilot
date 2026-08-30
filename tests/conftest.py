@@ -1,6 +1,6 @@
 import pytest
 import os
-os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only"
+os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only-32bytes"
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

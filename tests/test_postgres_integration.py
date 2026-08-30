@@ -51,7 +51,7 @@ def pg_client(pg_session):
 def test_pg_authentication_and_constraints(pg_client, pg_session):
     # 1. Create user
     res = pg_client.post("/api/auth/register", json={"name": "PG User", "email": "pg@a.com", "password": "password"})
-    assert res.status_code == 200
+    assert res.status_code == 201
 
     # 2. Check unique constraint
     res_dup = pg_client.post("/api/auth/register", json={"name": "Dup", "email": "pg@a.com", "password": "password"})
@@ -78,7 +78,7 @@ def test_pg_shipment_persistence_and_isolation(pg_client, pg_session):
     
     # Create shipment C1
     res_s1 = pg_client.post("/api/shipments", json={"sender_name": "S", "receiver_name": "R", "origin": "O", "destination": "D"}, headers={"Authorization": f"Bearer {t1}"})
-    assert res_s1.status_code == 200
+    assert res_s1.status_code == 201
     s1_id = res_s1.json()["id"]
     track_id = res_s1.json()["tracking_id"]
     
