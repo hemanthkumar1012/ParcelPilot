@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from contextlib import asynccontextmanager
-from app.api.endpoints import health, auth, shipments, drivers
+from app.api.endpoints import health, auth, shipments, drivers, notifications
 from app.core.config import settings
 from app.db.database import engine, Base
 from app.db import models
@@ -106,12 +106,14 @@ api_v1_router = APIRouter(prefix="/api/v1")
 api_v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_v1_router.include_router(shipments.router, prefix="/shipments", tags=["shipments"])
 api_v1_router.include_router(drivers.router, prefix="/drivers", tags=["drivers"])
+api_v1_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 app.include_router(api_v1_router)
 
 # Compatibility aliases
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"], include_in_schema=False)
 app.include_router(shipments.router, prefix="/api/shipments", tags=["shipments"], include_in_schema=False)
 app.include_router(drivers.router, prefix="/api/drivers", tags=["drivers"], include_in_schema=False)
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"], include_in_schema=False)
 
 # Health & Readiness
 app.include_router(health.router)

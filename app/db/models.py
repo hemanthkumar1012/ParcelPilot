@@ -20,6 +20,17 @@ class ShipmentStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
     RETURNED = "RETURNED"
 
+
+class NotificationType(str, enum.Enum):
+    SHIPMENT_ASSIGNED = "SHIPMENT_ASSIGNED"
+    SHIPMENT_PICKED_UP = "SHIPMENT_PICKED_UP"
+    SHIPMENT_IN_TRANSIT = "SHIPMENT_IN_TRANSIT"
+    SHIPMENT_OUT_FOR_DELIVERY = "SHIPMENT_OUT_FOR_DELIVERY"
+    SHIPMENT_DELIVERED = "SHIPMENT_DELIVERED"
+    SHIPMENT_FAILED = "SHIPMENT_FAILED"
+    SHIPMENT_CANCELLED = "SHIPMENT_CANCELLED"
+    SHIPMENT_RETURNED = "SHIPMENT_RETURNED"
+
 class User(Base):
     __tablename__ = "users"
 
@@ -32,6 +43,7 @@ class User(Base):
     
     shipments = relationship("Shipment", back_populates="customer", cascade="all, delete-orphan")
     driver_profile = relationship("Driver", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 
 class Driver(Base):
@@ -79,3 +91,19 @@ class ShipmentTrackingEvent(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     shipment = relationship("Shipment", back_populates="tracking_events")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    shipment_id = Column(Integer, ForeignKey("shipments.id"), nullable=True)
+    type = Column(Enum(NotificationType), nullable=False)
+    title = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    read_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User", back_populates="notifications")
+    shipment = relationship("Shipment")

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.db.models import Shipment, ShipmentTrackingEvent, ShipmentStatus, User, Role, Driver
 from app.schemas.shipment import ShipmentCreate, ShipmentStatusUpdate
+from app.services import notification as notification_service
+from app.db.models import NotificationType
 
 VALID_TRANSITIONS = {
     ShipmentStatus.CREATED: {ShipmentStatus.ASSIGNED, ShipmentStatus.CANCELLED},
@@ -92,6 +94,33 @@ def update_shipment_status(db: Session, shipment: Shipment, update_in: ShipmentS
         location=update_in.location
     )
 
+    # Generate notification based on new status
+    type_map = {
+        ShipmentStatus.ASSIGNED: NotificationType.SHIPMENT_ASSIGNED,
+        ShipmentStatus.PICKED_UP: NotificationType.SHIPMENT_PICKED_UP,
+        ShipmentStatus.IN_TRANSIT: NotificationType.SHIPMENT_IN_TRANSIT,
+        ShipmentStatus.OUT_FOR_DELIVERY: NotificationType.SHIPMENT_OUT_FOR_DELIVERY,
+        ShipmentStatus.DELIVERED: NotificationType.SHIPMENT_DELIVERED,
+        ShipmentStatus.FAILED: NotificationType.SHIPMENT_FAILED,
+        ShipmentStatus.CANCELLED: NotificationType.SHIPMENT_CANCELLED,
+        ShipmentStatus.RETURNED: NotificationType.SHIPMENT_RETURNED
+    }
+
+    n_type = type_map.get(update_in.status)
+    if n_type:
+        title = f"Shipment {shipment.tracking_id} updated to {update_in.status.value}"
+        # Notify customer
+        notification_service.create_notification(
+            db=db, user_id=shipment.customer_id, title=title, message=update_in.description, notification_type=n_type, shipment_id=shipment.id
+        )
+
+        # If transitioning to something relevant and there is a driver, notify driver as well
+        # (Though we shouldn't notify driver of ASSIGNED here because update_shipment_driver does it, but status update here for driver actions typically driver does it themselves. If admin does it, notify driver.)
+        if shipment.driver_id and user.id != shipment.driver.user_id:
+            notification_service.create_notification(
+                db=db, user_id=shipment.driver.user_id, title=title, message=update_in.description, notification_type=n_type, shipment_id=shipment.id
+            )
+
     db.refresh(shipment)
     return shipment
 
@@ -156,6 +185,17 @@ def update_shipment_driver(db: Session, shipment_id: int, driver_id: int, user: 
                 description=f"Assigned to driver {driver.user.name}",
                 location=shipment.origin
             )
+
+        notification_service.create_notification(
+            db=db, user_id=shipment.customer_id, title=f"Driver Assigned",
+            message=f"Driver {driver.user.name} has been assigned to your shipment {shipment.tracking_id}",
+            notification_type=NotificationType.SHIPMENT_ASSIGNED, shipment_id=shipment.id
+        )
+        notification_service.create_notification(
+            db=db, user_id=driver.user_id, title=f"New Shipment Assigned",
+            message=f"You have been assigned to shipment {shipment.tracking_id}",
+            notification_type=NotificationType.SHIPMENT_ASSIGNED, shipment_id=shipment.id
+        )
     else:
         # Unassign
         if shipment.driver_id:

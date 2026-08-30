@@ -201,3 +201,105 @@ function logout() { localStorage.removeItem('token'); window.location.href = '/l
 window.onclick = function(event) { if (event.target == document.getElementById('modal')) closeModal(); }
 
 init();
+
+// ---------------- Notification System ---------------- //
+
+async function fetchUnreadCount() {
+    try {
+        const res = await fetch('/api/v1/notifications/unread-count', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const badge = document.getElementById('notif-badge');
+            if (badge) {
+                if (data.unread_count > 0) {
+                    badge.innerText = data.unread_count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Failed to fetch unread count", e);
+    }
+}
+
+async function fetchNotifications() {
+    try {
+        const res = await fetch('/api/v1/notifications', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const listDiv = document.getElementById('notification-list');
+            if (!listDiv) return;
+
+            listDiv.innerHTML = '';
+            if (data.items.length === 0) {
+                listDiv.innerHTML = '<div style="color:gray;">No notifications.</div>';
+                return;
+            }
+
+            data.items.forEach(n => {
+                const item = document.createElement('div');
+                item.style.padding = '10px';
+                item.style.borderBottom = '1px solid #eee';
+                item.style.background = n.is_read ? 'white' : '#f0f9ff';
+
+                let html = `<strong>${n.title}</strong><div style="font-size:0.85rem; color:#666; margin-top:4px;">${n.message}</div>`;
+                html += `<div style="font-size:0.75rem; color:#999; margin-top:4px;">${new Date(n.created_at).toLocaleString()}</div>`;
+
+                if (!n.is_read) {
+                    html += `<button onclick="markNotificationRead(${n.id})" style="margin-top:8px; font-size:0.75rem;">Mark as Read</button>`;
+                }
+                item.innerHTML = html;
+                listDiv.appendChild(item);
+            });
+        }
+    } catch (e) {
+        console.error("Failed to fetch notifications", e);
+    }
+}
+
+function openNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        fetchNotifications();
+    }
+}
+
+function closeNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function markNotificationRead(id) {
+    try {
+        await fetch(`/api/v1/notifications/${id}/read`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications();
+        fetchUnreadCount();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function markAllNotificationsRead() {
+    try {
+        await fetch('/api/v1/notifications/read-all', {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications();
+        fetchUnreadCount();
+    } catch (e) {
+        console.error(e);
+    }
+}
