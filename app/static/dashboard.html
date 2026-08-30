@@ -11,7 +11,8 @@
             <h1 class="logo">ParcelPilot</h1>
             <nav>
                 <ul>
-                    <li class="active"><a href="/dashboard">Overview</a></li>
+                    <li id="nav-drivers" style="display:none;"><a href="#" onclick="showSection('drivers')">Drivers (Admin)</a></li>
+                    <li class="active" id="nav-overview"><a href="#" onclick="showSection('overview')">Overview</a></li>
                     <li><a href="#" onclick="alert('Coming soon')">Shipments</a></li>
                     <li><a href="/track" target="_blank">Public Tracking</a></li>
                 </ul>
@@ -29,6 +30,7 @@
                 <button id="create-shipment-btn" style="display: none;" onclick="openCreateModal()">+ Create Shipment</button>
             </header>
 
+            <div id="section-overview">
             <section class="stats">
                 <div class="card"><h3>Total Shipments</h3><p id="stat-total">0</p></div>
                 <div class="card"><h3>In Transit</h3><p id="stat-transit">0</p></div>
@@ -70,6 +72,20 @@
                     </tbody>
                 </table>
             </section>
+            </div>
+
+            <!-- Drivers Section -->
+            <div id="section-drivers" style="display:none;">
+                <header class="topbar" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Driver Management</h2>
+                    <button class="action-btn" onclick="openDriverModal()">+ Add Driver</button>
+                </header>
+                <section class="table-container">
+                    <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Vehicle</th><th>Availability</th><th>Assigned</th></tr></thead>
+                    <tbody id="drivers-tbody"></tbody></table>
+                </section>
+            </div>
+
         </main>
     </div>
 
@@ -108,6 +124,24 @@
         </div>
     </div>
     
+    
+    <div id="driver-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeDriverModal()">&times;</span>
+            <h2>Register Driver</h2>
+            <div id="driver-err" class="error"></div>
+            <form onsubmit="submitDriver(event)">
+                <div class="form-group"><label>Name</label><input type="text" id="drv-name" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="drv-email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="drv-pwd" required></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="drv-phone" required></div>
+                <div class="form-group"><label>Vehicle Number</label><input type="text" id="drv-veh-num" required></div>
+                <div class="form-group"><label>Vehicle Type</label><input type="text" id="drv-veh-type" required></div>
+                <button type="submit" style="width: 100%; margin-top: 1rem;">Register Driver</button>
+            </form>
+        </div>
+    </div>
+    
     <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
@@ -119,6 +153,14 @@
                     <p><strong>Customer ID:</strong> <span id="modal-customer"></span></p>
                     <p><strong>Origin:</strong> <span id="modal-origin"></span></p>
                     <p><strong>Destination:</strong> <span id="modal-destination"></span></p>
+                    
+    <div id="admin-assign" style="display: none; margin-top: 1rem; background: #0f172a; padding: 1rem; border-radius: 8px;">
+        <h3>Assign Driver</h3>
+        <select id="assign-driver-select"></select>
+        <button onclick="assignDriver()" style="margin-top: 1rem;">Update Assignment</button>
+        <button onclick="unassignDriver()" style="margin-top: 1rem; background: #ef4444;">Unassign</button>
+    </div>
+    
                     <div id="admin-update" style="display: none; margin-top: 2rem; background: #0f172a; padding: 1rem; border-radius: 8px;">
                         <h3>Update Status</h3>
                         <div id="update-err" class="error"></div>

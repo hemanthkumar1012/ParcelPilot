@@ -32,6 +32,7 @@ class ShipmentResponse(ShipmentBase):
     id: int
     tracking_id: str
     customer_id: int
+    driver_id: Optional[int] = None
     current_status: ShipmentStatus
     created_at: datetime
     updated_at: datetime
@@ -41,3 +42,6 @@ class ShipmentResponse(ShipmentBase):
 class PaginatedShipments(BaseModel):
     total: int
     items: List[ShipmentResponse]
+
+class DriverAssignmentUpdate(BaseModel):
+    driver_id: Optional[int] = None

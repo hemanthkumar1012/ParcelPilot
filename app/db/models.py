@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -7,6 +7,7 @@ import enum
 class Role(str, enum.Enum):
     CUSTOMER = "CUSTOMER"
     ADMIN = "ADMIN"
+    DRIVER = "DRIVER"
 
 class ShipmentStatus(str, enum.Enum):
     CREATED = "CREATED"
@@ -29,6 +30,22 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     shipments = relationship("Shipment", back_populates="customer", cascade="all, delete-orphan")
+    driver_profile = relationship("Driver", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+
+class Driver(Base):
+    __tablename__ = "drivers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    phone = Column(String, nullable=False)
+    vehicle_number = Column(String, nullable=False, unique=True)
+    vehicle_type = Column(String, nullable=False)
+    is_available = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="driver_profile")
+    assigned_shipments = relationship("Shipment", back_populates="driver")
 
 class Shipment(Base):
     __tablename__ = "shipments"
@@ -36,6 +53,7 @@ class Shipment(Base):
     id = Column(Integer, primary_key=True, index=True)
     tracking_id = Column(String, unique=True, index=True, nullable=False)
     customer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=True)
     sender_name = Column(String, nullable=False)
     receiver_name = Column(String, nullable=False)
     origin = Column(String, nullable=False)
@@ -46,6 +64,7 @@ class Shipment(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     customer = relationship("User", back_populates="shipments")
+    driver = relationship("Driver", back_populates="assigned_shipments")
     tracking_events = relationship("ShipmentTrackingEvent", back_populates="shipment", cascade="all, delete-orphan", order_by="ShipmentTrackingEvent.created_at")
 
 class ShipmentTrackingEvent(Base):

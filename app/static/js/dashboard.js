@@ -14,6 +14,7 @@ async function init() {
         document.getElementById('user-name').innerText = currentUser.name;
         document.getElementById('user-role').innerText = currentUser.role;
         
+        if (currentUser.role === 'ADMIN') { document.getElementById('nav-drivers').style.display = 'block'; loadDrivers(); }
         if (currentUser.role === 'CUSTOMER') {
             document.getElementById('dashboard-title').innerText = "My Shipments";
             document.getElementById('create-shipment-btn').style.display = 'block';
@@ -137,10 +138,10 @@ async function openModal(id) {
         }
         
         if (currentUser.role === 'ADMIN') {
-            document.getElementById('admin-update').style.display = 'block';
+            document.getElementById('admin-update').style.display = 'block'; document.getElementById('admin-assign').style.display = 'block';
             document.getElementById('new-status').value = data.current_status;
         } else {
-            document.getElementById('admin-update').style.display = 'none';
+            document.getElementById('admin-update').style.display = 'none'; document.getElementById('admin-assign').style.display = 'none';
         }
         
     } catch (e) {
@@ -288,4 +289,80 @@ window.onclick = function(event) {
     if (event.target == document.getElementById('create-modal')) {
         closeCreateModal();
     }
+    if (event.target == document.getElementById('driver-modal')) {
+        closeDriverModal();
+    }
+        closeCreateModal();
+    }
+}
+
+let allDrivers = [];
+
+function showSection(section) {
+    document.getElementById('section-overview').style.display = section === 'overview' ? 'block' : 'none';
+    document.getElementById('section-drivers').style.display = section === 'drivers' ? 'block' : 'none';
+    document.getElementById('nav-overview').className = section === 'overview' ? 'active' : '';
+    document.getElementById('nav-drivers').className = section === 'drivers' ? 'active' : '';
+    if(section === 'drivers') loadDrivers();
+}
+
+async function loadDrivers() {
+    try {
+        const res = await fetch('/api/drivers', { headers: { 'Authorization': `Bearer ${token}` } });
+        allDrivers = await res.json();
+        const tbody = document.getElementById('drivers-tbody');
+        tbody.innerHTML = '';
+        allDrivers.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${d.name}</td><td>${d.email}</td><td>${d.phone}</td><td>${d.vehicle_number} (${d.vehicle_type})</td>
+                            <td><span class="badge ${d.is_available ? 'delivered' : 'failed'}">${d.is_available ? 'Available' : 'Busy'}</span></td>
+                            <td>${d.assigned_shipments_count}</td>`;
+            tbody.appendChild(tr);
+        });
+        
+        // Populate assignment dropdown
+        const sel = document.getElementById('assign-driver-select');
+        sel.innerHTML = '<option value="">Select Driver</option>';
+        allDrivers.forEach(d => {
+            sel.innerHTML += `<option value="${d.id}" ${!d.is_available ? 'disabled' : ''}>${d.name} (${d.is_available ? 'Available' : 'Busy'})</option>`;
+        });
+    } catch (e) {}
+}
+
+function openDriverModal() {
+    document.getElementById('driver-err').style.display = 'none';
+    document.getElementById('driver-modal').style.display = 'flex';
+}
+function closeDriverModal() { document.getElementById('driver-modal').style.display = 'none'; }
+
+async function submitDriver(e) {
+    e.preventDefault();
+    const payload = {
+        name: document.getElementById('drv-name').value, email: document.getElementById('drv-email').value,
+        password: document.getElementById('drv-pwd').value, phone: document.getElementById('drv-phone').value,
+        vehicle_number: document.getElementById('drv-veh-num').value, vehicle_type: document.getElementById('drv-veh-type').value
+    };
+    try {
+        const res = await fetch('/api/drivers', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(!res.ok) throw new Error((await res.json()).detail);
+        closeDriverModal();
+        loadDrivers();
+    } catch(err) {
+        document.getElementById('driver-err').innerText = err.message;
+        document.getElementById('driver-err').style.display = 'block';
+    }
+}
+
+async function assignDriver() {
+    const drvId = document.getElementById('assign-driver-select').value;
+    if(!drvId) return;
+    await fetch(`/api/shipments/${currentShipmentId}/driver`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({driver_id: parseInt(drvId)}) });
+    openModal(currentShipmentId);
+    loadDrivers();
+}
+
+async function unassignDriver() {
+    await fetch(`/api/shipments/${currentShipmentId}/driver`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({driver_id: null}) });
+    openModal(currentShipmentId);
+    loadDrivers();
 }

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Dashboard - ParcelPilot</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <h1 class="logo">ParcelPilot</h1>
+            <nav>
+                <ul>
+                    <li class="active"><a href="/driver">My Shipments</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <div id="user-name" style="font-weight: bold;">Loading...</div>
+                <div id="user-role" style="font-size: 0.85rem; color: #94a3b8;">DRIVER</div>
+                <button onclick="logout()" class="logout-btn">Log Out</button>
+            </div>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <h2>Driver Console</h2>
+            </header>
+
+            <section class="stats">
+                <div class="card"><h3>Total Assigned</h3><p id="stat-total">0</p></div>
+                <div class="card"><h3>In Transit</h3><p id="stat-transit">0</p></div>
+                <div class="card"><h3>Out for Delivery</h3><p id="stat-out">0</p></div>
+                <div class="card"><h3>Delivered</h3><p id="stat-delivered">0</p></div>
+            </section>
+
+            <section class="table-container">
+                <div class="table-header">
+                    <h3>Assigned Shipments</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tracking ID</th>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shipments-tbody">
+                        <tr><td colspan="6" class="state-message">Loading assignments...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Shipment <span id="modal-tracking-id"></span></h2>
+            <div class="modal-body">
+                <div class="details-left">
+                    <p><strong>Status:</strong> <span id="modal-status" class="badge"></span></p>
+                    <p><strong>Origin:</strong> <span id="modal-origin"></span></p>
+                    <p><strong>Destination:</strong> <span id="modal-destination"></span></p>
+                    
+                    <div id="driver-update" style="margin-top: 2rem; background: #0f172a; padding: 1rem; border-radius: 8px;">
+                        <h3>Update Delivery Status</h3>
+                        <div id="update-err" class="error"></div>
+                        <div id="update-success" class="success"></div>
+                        <select id="new-status">
+                            <option value="PICKED_UP">Picked Up</option>
+                            <option value="IN_TRANSIT">In Transit</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="FAILED">Failed</option>
+                        </select>
+                        <input type="text" id="new-loc" placeholder="Current Location (optional)" style="margin-top: 0.5rem; width: 100%; box-sizing:border-box;">
+                        <input type="text" id="new-desc" placeholder="Status Description" style="margin-top: 0.5rem; width: 100%; box-sizing:border-box;" required>
+                        <button onclick="updateStatus()" style="margin-top: 1rem; width: 100%;">Update Status</button>
+                    </div>
+                </div>
+                <div class="details-right timeline" id="modal-timeline">
+                    <!-- events -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/driver.js"></script>
+</body>
+</html>

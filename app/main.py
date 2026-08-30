@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 
-from app.api.endpoints import health, auth, shipments
+from app.api.endpoints import health, auth, shipments, drivers
 from app.core.config import settings
 from app.db.database import engine, Base
 from app.db import models
@@ -31,6 +31,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(shipments.router, prefix="/api/shipments", tags=["shipments"])
+app.include_router(drivers.router, prefix="/api/drivers", tags=["drivers"])
 
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
@@ -51,3 +52,6 @@ def login_page():
 @app.get("/dashboard")
 def dashboard_page():
     return FileResponse(os.path.join(static_dir, "dashboard.html"))
+@app.get("/driver")
+def driver_page():
+    return FileResponse(os.path.join(static_dir, "driver.html"))

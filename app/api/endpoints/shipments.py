@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import User
 from app.api.deps import get_current_user
-from app.schemas.shipment import ShipmentCreate, ShipmentResponse, ShipmentStatusUpdate, PaginatedShipments
+from app.schemas.shipment import ShipmentCreate, ShipmentResponse, ShipmentStatusUpdate, PaginatedShipments, DriverAssignmentUpdate
 from app.services import shipment as shipment_service
 
 router = APIRouter()
@@ -28,3 +28,7 @@ def get_shipment(shipment_id: int, db: Session = Depends(get_db), current_user: 
 def update_status(shipment_id: int, update_in: ShipmentStatusUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     shipment = shipment_service.get_shipment_by_id(db, shipment_id, current_user)
     return shipment_service.update_shipment_status(db, shipment, update_in, current_user)
+
+@router.patch("/{shipment_id}/driver", response_model=ShipmentResponse)
+def update_driver(shipment_id: int, update_in: DriverAssignmentUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return shipment_service.update_shipment_driver(db, shipment_id, update_in.driver_id, current_user)

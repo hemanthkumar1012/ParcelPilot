@@ -35,7 +35,12 @@
             if (res.ok) {
                 const data = await res.json();
                 localStorage.setItem('token', data.access_token);
-                window.location.href = '/dashboard';
+                
+                const meRes = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${data.access_token}` } });
+                const meData = await meRes.json();
+                if (meData.role === 'DRIVER') window.location.href = '/driver';
+                else window.location.href = '/dashboard';
+    
             } else {
                 const data = await res.json();
                 err.innerText = data.detail;
